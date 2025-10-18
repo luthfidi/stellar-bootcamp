@@ -7,7 +7,7 @@ export default function Layout() {
     <div className="overflow-x-hidden">
       <Header />
 
-      <div className={cn("mt-36", "overflow-hidden px-[50px]")}>
+      <div className={cn("mt-2", "overflow-hidden px-[50px]")}>
         <Outlet />
       </div>
     </div>

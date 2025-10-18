@@ -153,14 +153,53 @@ impl CrowdfundingContract {
         env.storage().instance().get(&CAMPAIGN_OWNER).unwrap()
     }
 
-    // 🎓 ADVANCED EXERCISE untuk student:
-    // 6. refund() -> Challenge!
-    //    Allow donors dapat uang balik kalau goal tidak tercapai
-    //    Hints:
-    //    - Check campaign sudah ended && goal tidak tercapai
-    //    - Loop through donations map
-    //    - Transfer XLM kembali ke masing-masing donor
-    //    - Clear donations map setelah refund
+    /// Refund function - allow donors to get their money back
+    /// Only works if campaign ended AND goal NOT reached
+    /// Returns the amount refunded to the donor
+    pub fn refund(env: Env, donor: Address) -> i128 {
+        // Step 1: Authorization - donor must authorize this action
+        donor.require_auth();
+
+        // Step 2: Validation - check campaign has ended
+        if !Self::is_ended(env.clone()) {
+            panic!("Campaign belum berakhir");
+        }
+
+        // Step 3: Validation - check goal NOT reached
+        if Self::is_goal_reached(env.clone()) {
+            panic!("Goal sudah tercapai, tidak bisa refund");
+        }
+
+        // Step 4: Get donor's donation amount
+        let donations: Map<Address, i128> = env.storage().instance().get(&DONATIONS).unwrap();
+        let donation_amount = donations.get(donor.clone()).unwrap_or(0);
+
+        // Step 5: Validate donor has actual donation
+        if donation_amount <= 0 {
+            panic!("Tidak ada donasi untuk di-refund");
+        }
+
+        // Step 6: Transfer XLM back from contract to donor
+        let xlm_token_address: Address = env.storage().instance().get(&XLM_TOKEN_ADDRESS).unwrap();
+        let xlm_token = token::Client::new(&env, &xlm_token_address);
+        let contract_address = env.current_contract_address();
+
+        // Transfer from contract back to donor
+        xlm_token.transfer(&contract_address, &donor, &donation_amount);
+
+        // Step 7: Remove donor from donations map
+        let mut donations: Map<Address, i128> = env.storage().instance().get(&DONATIONS).unwrap();
+        donations.set(donor.clone(), 0);
+        env.storage().instance().set(&DONATIONS, &donations);
+
+        // Step 8: Update total_raised (subtract refunded amount)
+        let mut total: i128 = env.storage().instance().get(&TOTAL_RAISED).unwrap();
+        total -= donation_amount;
+        env.storage().instance().set(&TOTAL_RAISED, &total);
+
+        // Step 9: Return refunded amount
+        donation_amount
+    }
 }
 
 #[cfg(test)]

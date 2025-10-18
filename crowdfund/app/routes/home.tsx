@@ -7,7 +7,7 @@ import { Button } from "~/components/ui/button";
 import { useWallet } from "~/hooks/use-wallet";
 import { useNativeBalance } from "~/hooks/use-native-balance";
 import { useSubmitTransaction } from "~/hooks/use-submit-transaction";
-import * as Crowdfund from "../../packages/CDA5SCOH634WICVGXNMID2Z4ZPFESFL7RQNKLVWHVR3OUCB6IE2YWSQN";
+import * as Crowdfund from "../../packages/CBNB37OEW7XFHGEBMEIRSNZY3LYI4ZJQIXH43S2ES3VP65DMNVA66AWF";
 import { signTransaction } from "~/config/wallet.client";
 import { useState, useMemo, useEffect } from "react";
 
@@ -33,7 +33,15 @@ export default function Home() {
 
   // Initialization form states
   const [goal, setGoal] = useState<string>("100"); // Default 100 XLM
-  const [daysUntilDeadline, setDaysUntilDeadline] = useState<string>("30"); // Default 30 days
+  const [daysUntilDeadline, setDaysUntilDeadline] = useState<string>("5"); // Default 7 days (1 week)
+
+  // Campaign state from contract
+  const [campaignGoal, setCampaignGoal] = useState<number>(0);
+  const [campaignDeadline, setCampaignDeadline] = useState<number>(0);
+  const [progressPercentage, setProgressPercentage] = useState<number>(0);
+  const [isEnded, setIsEnded] = useState<boolean>(false);
+  const [isGoalReached, setIsGoalReached] = useState<boolean>(false);
+  const [campaignOwner, setCampaignOwner] = useState<string>("");
 
   const contract = useMemo(() => {
     if (!isConnected || address === "-") return null;
@@ -64,12 +72,28 @@ export default function Home() {
         const initialized = initTx.result as boolean;
         setIsInitialized(initialized);
 
-        // If initialized, fetch updated total
+        // If initialized, fetch all campaign data
         if (initialized) {
           setPreviousTotal(total);
-          const totalTx = await contract.get_total_raised();
-          const updated = BigInt(totalTx.result as any);
-          setTotal(Number(updated));
+
+          // Fetch all contract data
+          const [totalTx, goalTx, deadlineTx, progressTx, endedTx, goalReachedTx, ownerTx] = await Promise.all([
+            contract.get_total_raised(),
+            contract.get_goal(),
+            contract.get_deadline(),
+            contract.get_progress_percentage(),
+            contract.is_ended(),
+            contract.is_goal_reached(),
+            contract.get_owner(),
+          ]);
+
+          setTotal(Number(BigInt(totalTx.result as any)));
+          setCampaignGoal(Number(BigInt(goalTx.result as any)));
+          setCampaignDeadline(Number(BigInt(deadlineTx.result as any)));
+          setProgressPercentage(Number(BigInt(progressTx.result as any)));
+          setIsEnded(endedTx.result as boolean);
+          setIsGoalReached(goalReachedTx.result as boolean);
+          setCampaignOwner(ownerTx.result as string);
         }
       } catch (err) {
         console.error("Error refreshing state:", err);
@@ -117,11 +141,25 @@ export default function Home() {
         const initialized = initTx.result as boolean;
         setIsInitialized(initialized);
 
-        // If initialized, fetch total raised
+        // If initialized, fetch all campaign data
         if (initialized) {
-          const tx = await contract.get_total_raised();
-          const total = Number(BigInt(tx.result));
-          setTotal(total);
+          const [totalTx, goalTx, deadlineTx, progressTx, endedTx, goalReachedTx, ownerTx] = await Promise.all([
+            contract.get_total_raised(),
+            contract.get_goal(),
+            contract.get_deadline(),
+            contract.get_progress_percentage(),
+            contract.is_ended(),
+            contract.is_goal_reached(),
+            contract.get_owner(),
+          ]);
+
+          setTotal(Number(BigInt(totalTx.result as any)));
+          setCampaignGoal(Number(BigInt(goalTx.result as any)));
+          setCampaignDeadline(Number(BigInt(deadlineTx.result as any)));
+          setProgressPercentage(Number(BigInt(progressTx.result as any)));
+          setIsEnded(endedTx.result as boolean);
+          setIsGoalReached(goalReachedTx.result as boolean);
+          setCampaignOwner(ownerTx.result as string);
         }
       } catch (err) {
         console.error("Error checking initialization:", err);
@@ -154,26 +192,73 @@ export default function Home() {
     }
   }
 
+  async function handleRefund() {
+    if (!isConnected || !contract) return;
+
+    try {
+      const tx = await contract.refund({
+        donor: address,
+      }) as any;
+
+      await submit(tx);
+    } catch (e) {
+      console.error("Failed to refund", e);
+    }
+  }
+
+  // Helper function to format deadline
+  function formatDeadline(timestamp: number): string {
+    if (timestamp === 0) return "-";
+    const date = new Date(timestamp * 1000);
+    return date.toLocaleString();
+  }
+
+  // Helper function to calculate time remaining
+  function getTimeRemaining(deadline: number): string {
+    if (deadline === 0) return "-";
+    const now = Math.floor(Date.now() / 1000);
+    const remaining = deadline - now;
+
+    if (remaining <= 0) return "Campaign Ended";
+
+    const days = Math.floor(remaining / 86400);
+    const hours = Math.floor((remaining % 86400) / 3600);
+    const minutes = Math.floor((remaining % 3600) / 60);
+
+    if (days > 0) return `${days}d ${hours}h remaining`;
+    if (hours > 0) return `${hours}h ${minutes}m remaining`;
+    return `${minutes}m remaining`;
+  }
+
+  // Helper function to truncate address
+  function truncateAddress(address: string, startChars = 6, endChars = 4): string {
+    if (!address || address.length <= startChars + endChars) return address;
+    return `${address.slice(0, startChars)}...${address.slice(-endChars)}`;
+  }
+
   return (
-    <div className="flex flex-col items-center gap-y-12 pb-20">
+    <div className="flex flex-col items-center pb-4 pt-4">
       {/* Hero Section */}
-      <div className="flex flex-col items-center gap-y-8 text-center">
+      <div className="flex flex-col items-center gap-y-2 text-center mb-6">
         <div className="flex flex-row items-center gap-x-6">
           <p className="text-4xl md:text-5xl font-bold">Learning</p>
           <TextRotate
             texts={["Stellar", "Rust", "Contract", "Frontend"]}
-            mainClassName="bg-white text-black rounded-lg text-4xl md:text-5xl px-6 py-3 font-bold"
+            mainClassName="bg-white text-black rounded-xl text-4xl md:text-5xl px-7 py-3.5 font-bold shadow-sm"
             transition={{ type: "spring", damping: 30, stiffness: 400 }}
             rotationInterval={2000}
           />
         </div>
-        <p className="text-muted-foreground text-lg max-w-2xl">
+        <p className="text-muted-foreground text-base max-w-2xl">
           Support the project by donating XLM. Your contribution helps us build better tools for the Stellar ecosystem.
         </p>
       </div>
 
-      {/* Main Card - Shows Initialize or Donate based on state */}
-      <Card className="flex flex-col gap-y-6 py-8 px-10 w-full max-w-md">
+      {/* Main Content - 2 Column Layout */}
+      <div className="w-full max-w-6xl px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Left Column - Donation/Initialize Card */}
+          <Card className="flex flex-col gap-y-5 py-6 px-8 h-fit">
         {isCheckingInit ? (
           // Loading state
           <div className="flex flex-col items-center gap-4 py-8">
@@ -210,7 +295,7 @@ export default function Home() {
                 <label className="text-sm font-medium">Campaign Duration (Days)</label>
                 <Input
                   type="number"
-                  placeholder="30"
+                  placeholder="5"
                   onChange={(e) => setDaysUntilDeadline(e.target.value)}
                   value={daysUntilDeadline}
                   disabled={isSubmitting || !isConnected}
@@ -296,24 +381,132 @@ export default function Home() {
             )}
           </>
         )}
-      </Card>
+          </Card>
 
-      {/* Total Donations Stats - Only show if initialized */}
-      {isInitialized && !isCheckingInit && (
-        <div className="flex flex-col items-center gap-3 p-6 bg-muted/30 rounded-xl min-w-[300px]">
-          <p className="text-sm text-muted-foreground uppercase tracking-wider">
-            Total Donations Raised
-          </p>
-          <p className="text-4xl font-bold tabular-nums">
-            {(total / 10_000_000).toFixed(2)} XLM
-          </p>
-          {previousTotal > 0 && previousTotal !== total && (
-            <p className="text-sm text-green-500 font-medium animate-in fade-in slide-in-from-bottom-2">
-              +{((total - previousTotal) / 10_000_000).toFixed(7)} XLM just added!
-            </p>
+          {/* Right Column - Campaign Stats */}
+          {isInitialized && !isCheckingInit && (
+            <div className="flex flex-col gap-3">
+              {/* Progress Bar */}
+              <Card className="p-4">
+                <div className="flex flex-col gap-2.5">
+                  <div className="flex flex-row justify-between items-center">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Campaign Progress</p>
+                      <p className="text-2xl font-bold tabular-nums">
+                        {progressPercentage}%
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">Raised</p>
+                      <p className="text-xl font-semibold tabular-nums">
+                        {(total / 10_000_000).toFixed(2)} XLM
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="relative w-full h-2.5 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="absolute h-full bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-500 ease-out"
+                      style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+                    />
+                  </div>
+
+                  <div className="flex flex-row justify-between text-xs text-muted-foreground">
+                    <span>Goal: {(campaignGoal / 10_000_000).toFixed(2)} XLM</span>
+                    <span>{getTimeRemaining(campaignDeadline)}</span>
+                  </div>
+
+                  {previousTotal > 0 && previousTotal !== total && (
+                    <p className="text-xs text-green-500 font-medium animate-in fade-in slide-in-from-bottom-2 text-center">
+                      +{((total - previousTotal) / 10_000_000).toFixed(7)} XLM just added! 🎉
+                    </p>
+                  )}
+                </div>
+              </Card>
+
+              {/* Campaign Details */}
+              <div className="grid grid-cols-3 gap-2">
+                {/* Goal */}
+                <Card className="p-2.5">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Goal</p>
+                  <p className="text-sm font-bold tabular-nums">{(campaignGoal / 10_000_000).toFixed(2)} XLM</p>
+                </Card>
+
+                {/* Deadline */}
+                <Card className="p-2.5">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Deadline</p>
+                  <p className="text-[10px] font-medium leading-tight">{formatDeadline(campaignDeadline)}</p>
+                </Card>
+
+                {/* Status */}
+                <Card className="p-2.5">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Status</p>
+                  <div className="flex flex-col gap-1">
+                    {isGoalReached && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-500/20 text-green-600 w-fit">
+                        ✓ Goal
+                      </span>
+                    )}
+                    {!isGoalReached && !isEnded && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-500/20 text-blue-600 w-fit">
+                        ⏳ Active
+                      </span>
+                    )}
+                    {isEnded && !isGoalReached && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-500/20 text-red-600 w-fit">
+                        ✗ Failed
+                      </span>
+                    )}
+                    {isEnded && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-500/20 text-gray-600 w-fit">
+                        Ended
+                      </span>
+                    )}
+                  </div>
+                </Card>
+              </div>
+
+              {/* Refund Button - Only show if campaign ended and goal not reached */}
+              {isEnded && !isGoalReached && (
+                <Card className="p-3 border-red-500/50 bg-red-500/5">
+                  <div className="flex flex-col gap-2.5">
+                    <div>
+                      <h3 className="text-base font-semibold text-red-600 mb-0.5">Campaign Failed</h3>
+                      <p className="text-xs text-muted-foreground">
+                        The campaign didn't reach its goal. You can request a refund for your donations.
+                      </p>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      onClick={handleRefund}
+                      disabled={!isConnected || isSubmitting}
+                      className="w-full"
+                    >
+                      {isSubmitting ? "Processing Refund..." : "Request Refund"}
+                    </Button>
+                    {!isConnected && (
+                      <p className="text-xs text-center text-muted-foreground">
+                        Connect your wallet to request a refund
+                      </p>
+                    )}
+                  </div>
+                </Card>
+              )}
+
+              {/* Owner Info */}
+              <Card className="p-2.5 bg-muted/30">
+                <div className="flex flex-col gap-1">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Campaign Owner</p>
+                  <p className="text-xs font-mono" title={campaignOwner}>
+                    {truncateAddress(campaignOwner, 8, 6) || "-"}
+                  </p>
+                </div>
+              </Card>
+            </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

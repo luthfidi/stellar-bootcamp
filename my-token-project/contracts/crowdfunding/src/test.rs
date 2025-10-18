@@ -1,9 +1,16 @@
 #![cfg(test)]
 
 use super::*;
-use soroban_sdk::{testutils::Address as _, testutils::Ledger, Address, Env};
+use soroban_sdk::{testutils::Address as _, testutils::Ledger, token, Address, Env};
 
 const XLM_CONTRACT_TESTNET: &str = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+
+// Helper function to create and setup a mock token for testing
+fn create_token_contract<'a>(env: &Env, admin: &Address) -> (Address, token::StellarAssetClient<'a>) {
+    let token_address = env.register_stellar_asset_contract_v2(admin.clone());
+    let token = token::StellarAssetClient::new(&env, &token_address.address());
+    (token_address.address(), token)
+}
 
 // Test 1: Initialize campaign successfully
 #[test]
@@ -399,8 +406,147 @@ fn test_get_owner() {
     assert_eq!(client.get_owner(), owner);
 }
 
-// 🎓 ADVANCED STUDENT EXERCISE:
-// Test untuk refund() function jika kalian implement:
-// - test_refund_when_goal_not_reached() - donor dapat refund
-// - test_refund_fails_when_goal_reached() - tidak bisa refund kalau goal tercapai
-// - test_refund_fails_before_deadline() - tidak bisa refund sebelum deadline
+// 🎓 REFUND TESTS - Bonus Challenge Implementation
+
+// Test 18: Successful refund when goal not reached
+#[test]
+fn test_refund_success() {
+    let env = Env::default();
+    let contract_id = env.register(CrowdfundingContract, ());
+    let client = CrowdfundingContractClient::new(&env, &contract_id);
+
+    let owner = Address::generate(&env);
+    let donor = Address::generate(&env);
+    let goal = 100_000_000i128; // 10 XLM
+    let deadline = env.ledger().timestamp() + 100;
+
+    // Create mock token contract
+    let (token_address, token_client) = create_token_contract(&env, &owner);
+
+    env.mock_all_auths();
+
+    // Mint tokens to donor so they can donate
+    token_client.mint(&donor, &100_000_000i128);
+
+    client.initialize(&owner, &goal, &deadline, &token_address);
+
+    // Make donation (less than goal)
+    let donation_amount = 30_000_000i128; // 3 XLM
+    client.donate(&donor, &donation_amount);
+
+    // Verify donation recorded
+    assert_eq!(client.get_donation(&donor), donation_amount);
+    assert_eq!(client.get_total_raised(), donation_amount);
+
+    // Fast forward past deadline (goal not reached)
+    env.ledger().with_mut(|li| {
+        li.timestamp = deadline + 1;
+    });
+
+    // Verify campaign ended and goal not reached
+    assert_eq!(client.is_ended(), true);
+    assert_eq!(client.is_goal_reached(), false);
+
+    // Refund
+    let refunded = client.refund(&donor);
+
+    // Verify refund
+    assert_eq!(refunded, donation_amount);
+    assert_eq!(client.get_donation(&donor), 0);
+    assert_eq!(client.get_total_raised(), 0);
+}
+
+// Test 19: Refund fails before deadline
+#[test]
+#[should_panic(expected = "Campaign belum berakhir")]
+fn test_refund_before_deadline() {
+    let env = Env::default();
+    let contract_id = env.register(CrowdfundingContract, ());
+    let client = CrowdfundingContractClient::new(&env, &contract_id);
+
+    let owner = Address::generate(&env);
+    let donor = Address::generate(&env);
+    let goal = 100_000_000i128;
+    let deadline = env.ledger().timestamp() + 1000;
+
+    // Create mock token contract
+    let (token_address, token_client) = create_token_contract(&env, &owner);
+
+    env.mock_all_auths();
+
+    // Mint tokens to donor
+    token_client.mint(&donor, &100_000_000i128);
+
+    client.initialize(&owner, &goal, &deadline, &token_address);
+    client.donate(&donor, &30_000_000);
+
+    // Try refund before deadline - should panic
+    client.refund(&donor);
+}
+
+// Test 20: Refund fails when goal reached
+#[test]
+#[should_panic(expected = "Goal sudah tercapai, tidak bisa refund")]
+fn test_refund_when_goal_reached() {
+    let env = Env::default();
+    let contract_id = env.register(CrowdfundingContract, ());
+    let client = CrowdfundingContractClient::new(&env, &contract_id);
+
+    let owner = Address::generate(&env);
+    let donor = Address::generate(&env);
+    let goal = 50_000_000i128; // 5 XLM
+    let deadline = env.ledger().timestamp() + 100;
+
+    // Create mock token contract
+    let (token_address, token_client) = create_token_contract(&env, &owner);
+
+    env.mock_all_auths();
+
+    // Mint tokens to donor
+    token_client.mint(&donor, &100_000_000i128);
+
+    client.initialize(&owner, &goal, &deadline, &token_address);
+
+    // Donate exactly goal amount
+    client.donate(&donor, &goal);
+
+    // Fast forward past deadline
+    env.ledger().with_mut(|li| {
+        li.timestamp = deadline + 1;
+    });
+
+    // Verify goal reached
+    assert_eq!(client.is_goal_reached(), true);
+
+    // Try refund when goal reached - should panic
+    client.refund(&donor);
+}
+
+// Test 21: Refund fails when no donation exists
+#[test]
+#[should_panic(expected = "Tidak ada donasi untuk di-refund")]
+fn test_refund_no_donation() {
+    let env = Env::default();
+    let contract_id = env.register(CrowdfundingContract, ());
+    let client = CrowdfundingContractClient::new(&env, &contract_id);
+
+    let owner = Address::generate(&env);
+    let non_donor = Address::generate(&env);
+    let goal = 100_000_000i128;
+    let deadline = env.ledger().timestamp() + 100;
+
+    // Create mock token contract
+    let (token_address, _token_client) = create_token_contract(&env, &owner);
+
+    env.mock_all_auths();
+
+    client.initialize(&owner, &goal, &deadline, &token_address);
+
+    // Fast forward past deadline
+    env.ledger().with_mut(|li| {
+        li.timestamp = deadline + 1;
+    });
+
+    // Try refund without donation - should panic
+    client.refund(&non_donor);
+}
