@@ -20,7 +20,7 @@ Full-stack crowdfunding dApp on Stellar blockchain with Soroban smart contracts.
   - Bonus: `refund` (failed campaigns)
 
 ### 3. Frontend Integration
-- **Live Demo:** https://stellar-bootcamp.vercel.app/
+- **Live Demo:** https://fe-crowdfun.vercel.app/
 - React Router + TypeScript + Stellar SDK + Freighter Wallet
 - Features: Campaign stats, progress tracking, donations, refunds
 

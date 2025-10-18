@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git rm --cached crowdfund)",
+      "Bash(git remote add origin https://github.com/luthfidi/stellar-bootcamp.git)",
+      "Bash(git add crowdfund/)",
+      "Bash(cargo test)",
+      "Bash(stellar contract build)",
+      "Bash(stellar keys ls)",
+      "Bash(stellar contract bindings typescript --contract-id CBNB37OEW7XFHGEBMEIRSNZY3LYI4ZJQIXH43S2ES3VP65DMNVA66AWF --network testnet --output-dir ./packages/CBNB37OEW7XFHGEBMEIRSNZY3LYI4ZJQIXH43S2ES3VP65DMNVA66AWF)",
+      "Bash(npm install)",
+      "Bash(npm run build)",
+      "Bash(stellar contract invoke )",
+      "Bash(stellar contract invoke --id CBNB37OEW7XFHGEBMEIRSNZY3LYI4ZJQIXH43S2ES3VP65DMNVA66AWF --source-account alice --network testnet -- get_goal)",
+      "Bash(stellar contract invoke --id CBNB37OEW7XFHGEBMEIRSNZY3LYI4ZJQIXH43S2ES3VP65DMNVA66AWF --source-account alice --network testnet -- get_deadline)",
+      "Bash(stellar contract invoke --id CBNB37OEW7XFHGEBMEIRSNZY3LYI4ZJQIXH43S2ES3VP65DMNVA66AWF --source-account alice --network testnet -- is_goal_reached)",
+      "Bash(stellar contract invoke --id CBNB37OEW7XFHGEBMEIRSNZY3LYI4ZJQIXH43S2ES3VP65DMNVA66AWF --source-account alice --network testnet -- is_ended)",
+      "Bash(stellar contract invoke --id CBNB37OEW7XFHGEBMEIRSNZY3LYI4ZJQIXH43S2ES3VP65DMNVA66AWF --source-account alice --network testnet -- get_progress_percentage)",
+      "Bash(timeout 10 npm run dev)",
+      "Read(//mnt/c/users/luthf/OneDrive/Pictures/Screenshot/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
