@@ -24,11 +24,17 @@ export default function CreateCampaign() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [goalXlm, setGoalXlm] = useState("");
-  const [duration, setDuration] = useState("");
-  const [durationUnit, setDurationUnit] = useState<"minutes" | "hours" | "days">("days");
+  const [deadline, setDeadline] = useState("");
   const [category, setCategory] = useState("tech");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Get minimum datetime (now + 1 hour)
+  const getMinDateTime = () => {
+    const now = new Date();
+    now.setHours(now.getHours() + 1);
+    return now.toISOString().slice(0, 16);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,9 +61,19 @@ export default function CreateCampaign() {
       return;
     }
 
-    const durationNum = parseInt(duration);
-    if (isNaN(durationNum) || durationNum <= 0) {
-      setError("Duration must be a positive number");
+    if (!deadline) {
+      setError("Please select campaign end date and time");
+      return;
+    }
+
+    // Convert deadline to timestamp
+    const deadlineDate = new Date(deadline);
+    const deadlineTimestamp = Math.floor(deadlineDate.getTime() / 1000);
+
+    // Validate deadline is in the future
+    const now = Math.floor(Date.now() / 1000);
+    if (deadlineTimestamp <= now) {
+      setError("Deadline must be in the future");
       return;
     }
 
@@ -65,22 +81,13 @@ export default function CreateCampaign() {
       setIsSubmitting(true);
       setError(null);
 
-      // Calculate deadline timestamp
-      const now = Math.floor(Date.now() / 1000);
-      const multipliers = {
-        minutes: 60,
-        hours: 3600,
-        days: 86400,
-      };
-      const deadline = now + (durationNum * multipliers[durationUnit]);
-
       // Build and submit transaction
       const tx = await contract.create_campaign({
         owner: address,
         title,
         description,
         goal: xlmToStroops(goalNum),
-        deadline: BigInt(deadline),
+        deadline: BigInt(deadlineTimestamp),
         category,
         xlm_token: CONTRACTS.XLM_TOKEN,
         campaign_wasm_hash: getCampaignWasmHash(),
@@ -163,7 +170,7 @@ export default function CreateCampaign() {
               placeholder="Describe your campaign"
               maxLength={500}
               required
-              className="w-full min-h-[120px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full min-h-[120px] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="text-xs text-muted-foreground">
               {description.length}/500 characters
@@ -189,33 +196,21 @@ export default function CreateCampaign() {
             </p>
           </div>
 
-          {/* Duration */}
+          {/* Deadline */}
           <div className="space-y-2">
             <label className="text-sm font-medium">
-              Campaign Duration <span className="text-red-500">*</span>
+              Campaign End Date & Time <span className="text-red-500">*</span>
             </label>
-            <div className="flex gap-2">
-              <Input
-                type="number"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                placeholder="Enter duration"
-                min="1"
-                className="flex-1"
-                required
-              />
-              <select
-                value={durationUnit}
-                onChange={(e) => setDurationUnit(e.target.value as any)}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="minutes">Minutes</option>
-                <option value="hours">Hours</option>
-                <option value="days">Days</option>
-              </select>
-            </div>
+            <input
+              type="datetime-local"
+              value={deadline}
+              onChange={(e) => setDeadline(e.target.value)}
+              min={getMinDateTime()}
+              required
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 [color-scheme:light] dark:[color-scheme:dark]"
+            />
             <p className="text-xs text-muted-foreground">
-              Campaign will end after this duration
+              Select when the campaign should end (your local time)
             </p>
           </div>
 
@@ -227,11 +222,11 @@ export default function CreateCampaign() {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] dark:bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_0.5rem_center] bg-no-repeat"
               required
             >
               {CATEGORIES.map((cat) => (
-                <option key={cat.value} value={cat.value}>
+                <option key={cat.value} value={cat.value} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
                   {cat.label}
                 </option>
               ))}
