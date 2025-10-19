@@ -38,7 +38,7 @@
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
                 },
                 {
-                  "i128": "100000000"
+                  "i128": "200000000"
                 }
               ]
             }
@@ -60,10 +60,19 @@
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
                 },
                 {
-                  "i128": "50000000"
+                  "string": "Test Campaign"
+                },
+                {
+                  "string": "This is a test campaign"
+                },
+                {
+                  "i128": "100000000"
                 },
                 {
                   "u64": "100"
+                },
+                {
+                  "symbol": "tech"
                 },
                 {
                   "address": "CCABDO7UZXYE4W6GVSEGSNNZTKSLFQGKXXQTH6OX7M7GKZ4Z6CUJNGZN"
@@ -88,7 +97,7 @@
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
                 },
                 {
-                  "i128": "50000000"
+                  "i128": "100000000"
                 }
               ]
             }
@@ -107,7 +116,7 @@
                       "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM"
                     },
                     {
-                      "i128": "50000000"
+                      "i128": "100000000"
                     }
                   ]
                 }
@@ -217,10 +226,34 @@
                     "storage": [
                       {
                         "key": {
+                          "symbol": "category"
+                        },
+                        "val": {
+                          "symbol": "tech"
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "created"
+                        },
+                        "val": {
+                          "u64": "0"
+                        }
+                      },
+                      {
+                        "key": {
                           "symbol": "deadline"
                         },
                         "val": {
                           "u64": "100"
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "desc"
+                        },
+                        "val": {
+                          "string": "This is a test campaign"
                         }
                       },
                       {
@@ -234,7 +267,7 @@
                                 "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
                               },
                               "val": {
-                                "i128": "50000000"
+                                "i128": "100000000"
                               }
                             }
                           ]
@@ -245,7 +278,44 @@
                           "symbol": "goal"
                         },
                         "val": {
-                          "i128": "50000000"
+                          "i128": "100000000"
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "history"
+                        },
+                        "val": {
+                          "vec": [
+                            {
+                              "map": [
+                                {
+                                  "key": {
+                                    "symbol": "amount"
+                                  },
+                                  "val": {
+                                    "i128": "100000000"
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "symbol": "donor"
+                                  },
+                                  "val": {
+                                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "symbol": "timestamp"
+                                  },
+                                  "val": {
+                                    "u64": "0"
+                                  }
+                                }
+                              ]
+                            }
+                          ]
                         }
                       },
                       {
@@ -269,7 +339,23 @@
                           "symbol": "raised"
                         },
                         "val": {
-                          "i128": "50000000"
+                          "i128": "100000000"
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "title"
+                        },
+                        "val": {
+                          "string": "Test Campaign"
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "withdrawn"
+                        },
+                        "val": {
+                          "bool": false
                         }
                       },
                       {
@@ -431,7 +517,7 @@
                         "symbol": "amount"
                       },
                       "val": {
-                        "i128": "50000000"
+                        "i128": "100000000"
                       }
                     },
                     {
@@ -501,7 +587,7 @@
                         "symbol": "amount"
                       },
                       "val": {
-                        "i128": "50000000"
+                        "i128": "100000000"
                       }
                     },
                     {

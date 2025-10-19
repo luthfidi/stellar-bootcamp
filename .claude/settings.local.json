@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(stellar contract init contracts/factory)",
+      "Bash(stellar contract build)",
+      "Bash(cargo test --package crowdfunding)",
+      "Bash(cargo test --package factory)",
+      "Bash(stellar contract deploy --wasm ../target/wasm32v1-none/release/crowdfunding.wasm --source luthfi --network testnet)",
+      "Bash(stellar keys list)",
+      "Bash(stellar keys ls)",
+      "Bash(stellar contract deploy --wasm ../target/wasm32v1-none/release/crowdfunding.wasm --source alice --network testnet)",
+      "Bash(stellar contract deploy --wasm ../target/wasm32v1-none/release/factory.wasm --source alice --network testnet)",
+      "Bash(stellar contract invoke )",
+      "Bash(create_campaign )",
+      "Bash(stellar keys address alice)",
+      "Bash(stellar contract build --package factory)",
+      "Bash(get_campaign_count)",
+      "Bash(get_campaign )",
+      "Bash(get_metadata)",
+      "Bash(get_all_campaigns)",
+      "Bash(stellar contract bindings typescript )",
+      "Bash(npm install)",
+      "Bash(npm run build)",
+      "Bash(cargo run --bin test)",
+      "Bash(cat src/test.rs)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -60,10 +60,19 @@
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
                 },
                 {
+                  "string": "Test Campaign"
+                },
+                {
+                  "string": "This is a test campaign"
+                },
+                {
                   "i128": "100000000"
                 },
                 {
                   "u64": "1000"
+                },
+                {
+                  "symbol": "tech"
                 },
                 {
                   "address": "CCABDO7UZXYE4W6GVSEGSNNZTKSLFQGKXXQTH6OX7M7GKZ4Z6CUJNGZN"
@@ -216,10 +225,34 @@
                     "storage": [
                       {
                         "key": {
+                          "symbol": "category"
+                        },
+                        "val": {
+                          "symbol": "tech"
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "created"
+                        },
+                        "val": {
+                          "u64": "0"
+                        }
+                      },
+                      {
+                        "key": {
                           "symbol": "deadline"
                         },
                         "val": {
                           "u64": "1000"
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "desc"
+                        },
+                        "val": {
+                          "string": "This is a test campaign"
                         }
                       },
                       {
@@ -249,6 +282,43 @@
                       },
                       {
                         "key": {
+                          "symbol": "history"
+                        },
+                        "val": {
+                          "vec": [
+                            {
+                              "map": [
+                                {
+                                  "key": {
+                                    "symbol": "amount"
+                                  },
+                                  "val": {
+                                    "i128": "30000000"
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "symbol": "donor"
+                                  },
+                                  "val": {
+                                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "symbol": "timestamp"
+                                  },
+                                  "val": {
+                                    "u64": "0"
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
                           "symbol": "is_init"
                         },
                         "val": {
@@ -269,6 +339,22 @@
                         },
                         "val": {
                           "i128": "30000000"
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "title"
+                        },
+                        "val": {
+                          "string": "Test Campaign"
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "withdrawn"
+                        },
+                        "val": {
+                          "bool": false
                         }
                       },
                       {

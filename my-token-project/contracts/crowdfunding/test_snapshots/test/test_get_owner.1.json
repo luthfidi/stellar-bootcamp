@@ -19,10 +19,19 @@
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
                 },
                 {
+                  "string": "Test Campaign"
+                },
+                {
+                  "string": "This is a test campaign"
+                },
+                {
                   "i128": "900000000"
                 },
                 {
                   "u64": "86400"
+                },
+                {
+                  "symbol": "tech"
                 },
                 {
                   "address": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
@@ -71,10 +80,34 @@
                     "storage": [
                       {
                         "key": {
+                          "symbol": "category"
+                        },
+                        "val": {
+                          "symbol": "tech"
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "created"
+                        },
+                        "val": {
+                          "u64": "0"
+                        }
+                      },
+                      {
+                        "key": {
                           "symbol": "deadline"
                         },
                         "val": {
                           "u64": "86400"
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "desc"
+                        },
+                        "val": {
+                          "string": "This is a test campaign"
                         }
                       },
                       {
@@ -91,6 +124,14 @@
                         },
                         "val": {
                           "i128": "900000000"
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "history"
+                        },
+                        "val": {
+                          "vec": []
                         }
                       },
                       {
@@ -115,6 +156,22 @@
                         },
                         "val": {
                           "i128": "0"
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "title"
+                        },
+                        "val": {
+                          "string": "Test Campaign"
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "withdrawn"
+                        },
+                        "val": {
+                          "bool": false
                         }
                       },
                       {
